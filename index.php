@@ -83,12 +83,10 @@ $categories = ['beauty', 'fragrances', 'furniture', 'groceries', 'laptops', 'sma
             background-color: #f4f6fb;
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
-        /* Sticky Glass Navbar */
         .navbar-custom {
             background: rgba(15, 23, 42, 0.92);
             backdrop-filter: blur(12px);
         }
-        /* Hero Banner */
         .hero-banner {
             background: var(--primary-gradient);
             color: white;
@@ -96,7 +94,6 @@ $categories = ['beauty', 'fragrances', 'furniture', 'groceries', 'laptops', 'sma
             padding: 2.5rem 2rem;
             box-shadow: 0 15px 30px rgba(99, 102, 241, 0.25);
         }
-        /* Interactive Product Cards & Hover Effects */
         .product-card {
             border: none;
             border-radius: 16px;
@@ -126,7 +123,6 @@ $categories = ['beauty', 'fragrances', 'furniture', 'groceries', 'laptops', 'sma
         .product-card:hover .img-wrapper img {
             transform: scale(1.12);
         }
-        /* Quick Action Hover Overlay */
         .card-actions-overlay {
             position: absolute;
             top: 12px;
@@ -200,12 +196,9 @@ $categories = ['beauty', 'fragrances', 'furniture', 'groceries', 'laptops', 'sma
         </a>
         
         <div class="d-flex align-items-center gap-3 order-lg-3">
-            <!-- Add Product Modal Trigger -->
             <button class="btn btn-outline-light rounded-pill px-3 btn-sm d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#createModal">
                 <i class="bi bi-plus-circle-fill text-info"></i> Add Product
             </button>
-            
-            <!-- Shopping Cart Trigger -->
             <button class="btn btn-primary rounded-pill px-3 position-relative d-flex align-items-center gap-2" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas">
                 <i class="bi bi-cart3"></i> Cart
                 <span id="cartCountBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
@@ -271,6 +264,8 @@ $categories = ['beauty', 'fragrances', 'furniture', 'groceries', 'laptops', 'sma
 
         <?php foreach ($products as $product): 
             $discount = round($product['discountPercentage'] ?? 0);
+            $rating = number_format($product['rating'] ?? 0, 1);
+            $stock = $product['stock'] ?? 15;
             $productJson = htmlspecialchars(json_encode($product), ENT_QUOTES, 'UTF-8');
         ?>
             <div class="col-sm-6 col-md-4 col-lg-3">
@@ -288,7 +283,7 @@ $categories = ['beauty', 'fragrances', 'furniture', 'groceries', 'laptops', 'sma
                                     onclick="openEditModal(<?= $product['id'] ?>, '<?= htmlspecialchars(addslashes($product['title'])) ?>', <?= $product['price'] ?>)">
                                 <i class="bi bi-pencil-square"></i>
                             </button>
-                            <form method="POST" onsubmit="return confirm('Delete <?= htmlspecialchars(addslashes($product['title'])) ?> (ID #<?= $product['id'] ?>)?');">
+                            <form method="POST" onsubmit="return confirm('Delete <?= htmlspecialchars(addslashes($product['title'])) ?>?');">
                                 <input type="hidden" name="action" value="delete">
                                 <input type="hidden" name="id" value="<?= $product['id'] ?>">
                                 <button type="submit" class="action-icon-btn text-danger" title="Delete Product (DELETE)">
@@ -302,7 +297,7 @@ $categories = ['beauty', 'fragrances', 'furniture', 'groceries', 'laptops', 'sma
                     <div class="card-body d-flex flex-column p-3">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="badge bg-light text-secondary border text-capitalize"><?= htmlspecialchars($product['category']) ?></span>
-                            <span class="small fw-semibold text-warning"><i class="bi bi-star-fill"></i> <?= $product['rating'] ?></span>
+                            <span class="small fw-semibold text-warning"><i class="bi bi-star-fill"></i> <?= $rating ?></span>
                         </div>
                         
                         <h6 class="card-title fw-bold text-dark mb-1 text-truncate" style="cursor:pointer;" onclick='openQuickView(<?= $productJson ?>)'>
@@ -312,12 +307,21 @@ $categories = ['beauty', 'fragrances', 'furniture', 'groceries', 'laptops', 'sma
                             <?= htmlspecialchars($product['description']) ?>
                         </p>
 
-                        <div class="d-flex justify-content-between align-items-baseline mt-2 mb-3">
-                            <div>
-                                <span class="fs-5 fw-bold text-dark">$<?= number_format($product['price'], 2) ?></span>
-                                <small class="text-muted ms-1">ID #<?= $product['id'] ?></small>
+                        <!-- Stock Indicator Redesign -->
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between align-items-center small mb-1">
+                                <span class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-box-seam me-1"></i>Availability</span>
+                                <span class="fw-semibold <?= $stock < 10 ? 'text-danger' : 'text-success' ?>" style="font-size: 0.75rem;">
+                                    <?= $stock < 10 ? "Only $stock left!" : "In Stock ($stock)" ?>
+                                </span>
                             </div>
-                            <span class="badge bg-success-subtle text-success"><?= ($product['stock'] ?? 15) ?> in stock</span>
+                            <div class="progress" style="height: 4px;">
+                                <div class="progress-bar <?= $stock < 10 ? 'bg-danger' : 'bg-success' ?>" style="width: <?= min(100, ($stock / 50) * 100) ?>%"></div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-baseline mb-3">
+                            <span class="fs-5 fw-bold text-dark">$<?= number_format($product['price'], 2) ?></span>
                         </div>
 
                         <!-- Interactive Purchase & Cart Buttons -->
@@ -388,10 +392,7 @@ $categories = ['beauty', 'fragrances', 'furniture', 'groceries', 'laptops', 'sma
             <form method="POST">
                 <div class="modal-body p-4">
                     <input type="hidden" name="action" value="update">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small">Product ID</label>
-                        <input type="number" name="id" id="editId" class="form-control bg-light" readonly required>
-                    </div>
+                    <input type="hidden" name="id" id="editId" required>
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">Updated Title</label>
                         <input type="text" name="title" id="editTitle" class="form-control" required>
@@ -431,7 +432,6 @@ $categories = ['beauty', 'fragrances', 'furniture', 'groceries', 'laptops', 'sma
                     <div class="border-top pt-3 mt-3 d-flex justify-content-between small text-muted mb-3">
                         <span><i class="bi bi-box-seam me-1"></i>Stock: <strong id="qvStock"></strong></span>
                         <span><i class="bi bi-star-fill text-warning me-1"></i>Rating: <strong id="qvRating"></strong></span>
-                        <span><i class="bi bi-upc-scan me-1"></i>ID: #<strong id="qvId"></strong></span>
                     </div>
                     <button id="qvBuyBtn" class="btn btn-buy w-100 rounded-pill py-2">
                         <i class="bi bi-bag-check-fill me-1"></i> Add to Cart
@@ -462,7 +462,7 @@ $categories = ['beauty', 'fragrances', 'furniture', 'groceries', 'laptops', 'sma
     </div>
 </div>
 
-<!-- TOAST NOTIFICATION FOR CART / PURCHASE -->
+<!-- TOAST NOTIFICATION -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
     <div id="liveToast" class="toast align-items-center text-bg-dark border-0 rounded-3" role="alert">
         <div class="d-flex">
@@ -562,8 +562,7 @@ $categories = ['beauty', 'fragrances', 'furniture', 'groceries', 'laptops', 'sma
         document.getElementById('qvPrice').textContent = '$' + Number(product.price).toFixed(2);
         document.getElementById('qvDesc').textContent = product.description;
         document.getElementById('qvStock').textContent = product.stock ?? 15;
-        document.getElementById('qvRating').textContent = product.rating;
-        document.getElementById('qvId').textContent = product.id;
+        document.getElementById('qvRating').textContent = Number(product.rating ?? 0).toFixed(1);
 
         const btn = document.getElementById('qvBuyBtn');
         btn.onclick = () => {
